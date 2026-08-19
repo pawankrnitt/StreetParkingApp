@@ -7,7 +7,8 @@ from repo.bookingRepo import (
     count_active_bookings_for_lot,
     create_online_booking,
     create_offline_booking,
-    update_booking_status
+    update_booking_status,
+    get_bookings_by_user
 )
 from repo.parkingRepo import get_parking_lot_by_id
 from repo.vehicleRepo import get_vehicles_by_user
@@ -72,14 +73,33 @@ def process_offline_booking(db: Session, request: OfflineBookingCreateRequest):
     amount = calculate_amount(request.startTime, request.endTime)
     return create_offline_booking(db, request, amount)
 
+from datetime import datetime
+
 def checkout_booking(db: Session, booking_id: int):
-    booking = update_booking_status(db, booking_id, BookingStatus.COMPLETED)
+    # We must fetch the booking to see its end time
+    booking = get_booking_by_id(db, booking_id)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
-    return booking
+
+    actual_end_time = datetime.utcnow()
+    overstay_amount = 0.0
+
+    if actual_end_time > booking.endTime:
+        overstay_duration_hours = (actual_end_time - booking.endTime).total_seconds() / 3600.0
+        # 10% hike on the normal fare
+        overstay_hourly_rate = BASE_HOURLY_RATE * 1.10
+        overstay_amount = max(0.0, round(overstay_duration_hours * overstay_hourly_rate, 2))
+
+    # Use the new repo function
+    from repo.bookingRepo import checkout_booking_in_db
+    updated_booking = checkout_booking_in_db(db, booking_id, actual_end_time, overstay_amount)
+    return updated_booking
 
 def fetch_booking(db: Session, booking_id: int):
     booking = get_booking_by_id(db, booking_id)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     return booking
+
+def fetch_user_bookings(db: Session, user_id: int):
+    return get_bookings_by_user(db, user_id)

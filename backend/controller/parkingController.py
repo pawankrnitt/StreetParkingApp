@@ -2,11 +2,26 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from schema.parkingSchema import ParkingLotCreateRequest, ParkingLotStatusUpdateRequest
 from repo.parkingRepo import get_parking_lots, get_parking_lot_by_id, create_parking_lot, update_parking_lot_status, delete_parking_lot
+from repo.bookingRepo import get_active_bookings_for_lot
+from datetime import datetime
 
-def fetch_parking_lots(db: Session, user_role: str):
+from typing import Optional
+
+def fetch_parking_lots(db: Session, user_role: str, start: Optional[datetime] = None, end: Optional[datetime] = None):
     # citizens only see active lots
     only_active = user_role != "ADMIN"
-    return get_parking_lots(db, only_active)
+    lots = get_parking_lots(db, only_active)
+    
+    if not start or not end:
+        start = datetime.now()
+        end = datetime.now()
+        
+    for lot in lots:
+        bookings = get_active_bookings_for_lot(db, lot.id, start, end)
+        booked_slots_set = {b.parkingSlotId for b in bookings}
+        lot.availableSlots = max(0, lot.totalSlots - len(booked_slots_set))
+            
+    return lots
 
 def fetch_parking_lot(db: Session, lot_id: int):
     lot = get_parking_lot_by_id(db, lot_id)
@@ -39,3 +54,8 @@ def remove_parking_lot(db: Session, lot_id: int):
     if not lot:
         raise HTTPException(status_code=404, detail="Parking lot not found")
     return {"message": "Parking lot deleted successfully"}
+
+def fetch_booked_slot_ids(db: Session, lot_id: int, start_time: datetime, end_time: datetime):
+    bookings = get_active_bookings_for_lot(db, lot_id, start_time, end_time)
+    booked_slot_ids = [b.parkingSlotId for b in bookings]
+    return {"bookedSlotIds": booked_slot_ids}

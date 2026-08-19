@@ -16,6 +16,8 @@ class Booking(Base):
     status = Column(String, nullable=False) # PENDING, CONFIRMED, ACTIVE, COMPLETED, OVERSTAYED, CANCELLED
     bookingType = Column(String, nullable=False) # ONLINE, OFFLINE
     totalAmount = Column(Float, nullable=False, default=0.0)
+    actualEndTime = Column(DateTime, nullable=True)
+    overstayAmount = Column(Float, nullable=False, default=0.0)
 
     user = relationship("User", back_populates="bookings")
     vehicle = relationship("Vehicle", back_populates="bookings")

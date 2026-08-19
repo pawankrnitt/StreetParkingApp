@@ -1,12 +1,30 @@
 import os
 from config.database import SessionLocal, engine, Base
 from model.parkingModel import ParkingLot
+from model.userModel import User
+from middleware.auth import get_password_hash
 
 def seed():
     # Only create tables if they don't exist (Useful for rapid provisioning)
     Base.metadata.create_all(bind=engine)
     
     db = SessionLocal()
+    
+    # Check and create default admin
+    admin_email = "admin@streetpark.com"
+    admin_user = db.query(User).filter(User.email == admin_email).first()
+    if not admin_user:
+        hashed_password = get_password_hash("admin123")
+        admin_user = User(
+            name="Super Admin",
+            email=admin_email,
+            phone="0000000000",
+            passwordHash=hashed_password,
+            role="ADMIN"
+        )
+        db.add(admin_user)
+        db.commit()
+        print(f"Created default admin: {admin_email} / admin123")
     
     # Check if data already exists
     if db.query(ParkingLot).first():

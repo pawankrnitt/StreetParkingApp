@@ -30,6 +30,7 @@ class ParkingLotResponse(BaseModel):
     totalSlots: int
     onlineSlots: int
     offlineSlots: int
+    availableSlots: Optional[int] = None
     status: str
     slots: List[ParkingSlotResponse] = []
 

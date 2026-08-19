@@ -6,7 +6,8 @@ from controller.bookingController import (
     process_online_booking,
     process_offline_booking,
     checkout_booking,
-    fetch_booking
+    fetch_booking,
+    fetch_user_bookings
 )
 from middleware.auth import get_current_user, require_admin
 from model.userModel import User
@@ -17,9 +18,15 @@ router = APIRouter(prefix="/api/v1/booking", tags=["Booking"])
 def create_booking(request: BookingCreateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return process_online_booking(db, request, current_user.id)
 
+from typing import List
+
 @router.post("/offline", response_model=BookingResponse)
 def create_offline(request: OfflineBookingCreateRequest, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     return process_offline_booking(db, request)
+
+@router.get("/my-bookings", response_model=List[BookingResponse])
+def get_my_bookings(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return fetch_user_bookings(db, current_user.id)
 
 @router.post("/{bookingId}/checkout", response_model=BookingResponse)
 def checkout(bookingId: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):

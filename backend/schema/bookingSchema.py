@@ -23,6 +23,8 @@ class BookingResponse(BaseModel):
     status: str
     bookingType: str
     totalAmount: float
+    actualEndTime: Optional[datetime] = None
+    overstayAmount: float = 0.0
 
     class Config:
         from_attributes = True
