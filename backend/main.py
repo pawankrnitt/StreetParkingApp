@@ -24,7 +24,7 @@ app = FastAPI(title="Street Parking App", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # In production, restrict this to the frontend URL
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
