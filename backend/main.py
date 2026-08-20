@@ -20,6 +20,17 @@ with engine.connect() as conn:
 
 app = FastAPI(title="Street Parking App", version="1.0.0")
 
+from fastapi.responses import JSONResponse
+from fastapi import Request
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal Server Error", "traceback": traceback.format_exc()}
+    )
+
 # Setup CORS for frontend
 app.add_middleware(
     CORSMiddleware,
