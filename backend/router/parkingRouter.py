@@ -16,9 +16,13 @@ def create_lot(request: ParkingLotCreateRequest, db: Session = Depends(get_db), 
 
 @router.get("", response_model=List[ParkingLotResponse])
 def get_lots(start: Optional[datetime] = None, end: Optional[datetime] = None, db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_optional_current_user)):
-    # if not logged in, assume CITIZEN role, else use actual role
-    role = current_user.role if current_user else "CITIZEN"
-    return fetch_parking_lots(db, role, start, end)
+    try:
+        # if not logged in, assume CITIZEN role, else use actual role
+        role = current_user.role if current_user else "CITIZEN"
+        return fetch_parking_lots(db, role, start, end)
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=400, detail=traceback.format_exc())
 
 @router.get("/{lotId}", response_model=ParkingLotResponse)
 def get_lot(lotId: int, db: Session = Depends(get_db)):
