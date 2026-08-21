@@ -29,6 +29,19 @@ def create_parking_lot(db: Session, request: ParkingLotCreateRequest):
     db.add(lot)
     db.commit()
     db.refresh(lot)
+
+    # Generate ParkingSlots immediately for the lot
+    new_slots = []
+    for i in range(1, lot.onlineSlots + 1):
+        new_slots.append(ParkingSlot(
+            parkingLotId=lot.id,
+            slotNumber=f"S-{i:03d}",
+            status="AVAILABLE",
+            vehicleType="CAR"
+        ))
+    db.add_all(new_slots)
+    db.commit()
+
     return lot
 
 def update_parking_lot_status(db: Session, lot_id: int, status: str):

@@ -19,6 +19,13 @@ try:
 except Exception:
     pass
 
+# Ensure slots are generated for any lots that are missing them
+try:
+    from generate_slots import generate_slots
+    generate_slots()
+except Exception as e:
+    print("Error generating slots:", e)
+
 app = FastAPI(title="Street Parking App", version="1.0.0")
 
 from fastapi.responses import JSONResponse
