@@ -5,18 +5,19 @@ from config.database import Base, engine
 # Create the database tables if they don't exist yet (though Alembic is preferred)
 Base.metadata.create_all(bind=engine)
 
-# Auto-migrate the database to add new columns if they don't exist (for SQLite)
+# Auto-migrate the database to add new columns if they don't exist
 from sqlalchemy import text
-with engine.connect() as conn:
-    try:
-        conn.execute(text("ALTER TABLE bookings ADD COLUMN actualEndTime DATETIME"))
-    except Exception:
-        pass
-    try:
-        conn.execute(text("ALTER TABLE bookings ADD COLUMN overstayAmount FLOAT DEFAULT 0.0"))
-    except Exception:
-        pass
-    conn.commit()
+try:
+    with engine.begin() as conn:
+        conn.execute(text('ALTER TABLE bookings ADD COLUMN "actualEndTime" TIMESTAMP'))
+except Exception:
+    pass
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text('ALTER TABLE bookings ADD COLUMN "overstayAmount" FLOAT DEFAULT 0.0'))
+except Exception:
+    pass
 
 app = FastAPI(title="Street Parking App", version="1.0.0")
 
